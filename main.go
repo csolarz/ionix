@@ -1,14 +1,16 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+
+	"github.com/csolarz/ionix/internal/controller"
+)
 
 func main() {
-	router := gin.Default()
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	router.Run() // escucha en 0.0.0.0:8080 por defecto
+	router := controller.SetupRouter()
 
+	// escucha en 0.0.0.0:8080 por defecto
+	if err := router.Run(); err != nil {
+		log.Fatalf("failed to start server: %v", err)
+	}
 }
