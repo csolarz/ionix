@@ -1,0 +1,80 @@
+name: Checking
+on:
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  # El job de test ahora valida cobertura usando make coverage
+  # Instala Go, cachea dependencias, compila, corre tests con cobertura.
+  test:
+    name: Testing and coverage
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        go-version: ['1.25']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Run Tests
+      run: go test -race -covermode=atomic -v ./... -coverprofile=coverage.txt
+
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        name: coverage-report
+
+  # Analiza el código con golangci-lint.
+  golangci:
+    name: Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4.0
+
+  sast:
+    name: SAST Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.25'
+
+    - name: Install gosec
+      run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+    - name: Run gosec (SAST scan)
+      run: gosec -exclude-generated -exclude=G115,G401 ./...
