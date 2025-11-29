@@ -8,6 +8,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// Define la interfaz del repositorio de base de datos, sirve para desacoplar la lógica de negocio
+// de la implementación concreta del acceso a datos.
+// Se usa mockery para generar mocks de esta interfaz para pruebas unitarias.
+
 //go:generate mockery --name=DBRepository --output=./mock --outpkg=mock --case=snake
 type DBRepository interface {
 	GetByID(ctx context.Context, id int64, data any) error
@@ -41,23 +45,19 @@ func (r *DBGorm) Close() error {
 
 func (r *DBGorm) GetByID(ctx context.Context, id int64, data any) error {
 	result := r.db.WithContext(ctx).First(data, id)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return fmt.Errorf("registro no encontrado")
-		}
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		return fmt.Errorf("error obteniendo registro: %w", result.Error)
 	}
+
 	return nil
 }
 
 func (r *DBGorm) GetAll(ctx context.Context, data any) error {
 	result := r.db.WithContext(ctx).Find(data)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return fmt.Errorf("registro no encontrado")
-		}
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		return fmt.Errorf("error obteniendo registros: %w", result.Error)
 	}
+
 	return nil
 }
 
@@ -66,6 +66,7 @@ func (r *DBGorm) Create(ctx context.Context, data any) error {
 	if result.Error != nil {
 		return fmt.Errorf("error creando registro: %w", result.Error)
 	}
+
 	return nil
 }
 

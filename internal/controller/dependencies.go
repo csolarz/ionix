@@ -8,12 +8,12 @@ import (
 )
 
 type dependencies struct {
-	*AuthController
-	*TaskController
+	Auth *AuthController
+	Task *TaskController
 }
 
 func registerDependencies() dependencies {
-	db, err := infra.NewDBGorm(os.Getenv("CONECTION_STRING_DB"))
+	db, err := infra.NewDBGorm(os.Getenv("CONNECTION_STRING_DB"))
 	if err != nil {
 		panic(err)
 	}
@@ -22,7 +22,7 @@ func registerDependencies() dependencies {
 	taskCtrl := NewTaskController(taskSvc)
 
 	return dependencies{
-		AuthController: NewAuthController(nil),
-		TaskController: taskCtrl,
+		Auth: NewAuthController(nil),
+		Task: taskCtrl,
 	}
 }

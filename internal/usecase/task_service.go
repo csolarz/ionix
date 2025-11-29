@@ -7,6 +7,10 @@ import (
 	"github.com/csolarz/ionix/internal/infra"
 )
 
+// Define los casos de uso relacionados con las tareas, sirve para desacoplar la lógica de negocio
+// de la implementación concreta del repositorio de datos.
+// Se usa mockery para generar mocks de esta interfaz para pruebas unitarias.
+//
 //go:generate mockery --name=TaskUsecase --output=./mock --outpkg=mock --case=snake
 type TaskUsecase interface {
 	Create(ctx context.Context, task *domain.Task) (*domain.Task, error)
@@ -31,6 +35,7 @@ func (s *TaskService) Create(ctx context.Context, task *domain.Task) (*domain.Ta
 	if err != nil {
 		return nil, err
 	}
+
 	return task, nil
 }
 
@@ -40,6 +45,7 @@ func (s *TaskService) GetByID(ctx context.Context, id int64) (*domain.Task, erro
 	if err != nil {
 		return nil, err
 	}
+
 	return task, nil
 }
 

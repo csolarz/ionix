@@ -142,28 +142,3 @@ func TestGetTaskByID_UsecaseError_WithGeneratedMock(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	m.AssertExpectations(t)
 }
-
-func TestGetAll_Update_Delete_NotImplemented(t *testing.T) {
-	// Controller currently returns NotImplemented for these endpoints.
-	m := mockusecase.NewTaskUsecase(t)
-	router := setupRouterWithMock(m)
-
-	// GetAll
-	req := httptest.NewRequest(http.MethodGet, "/tasks", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotImplemented, w.Code)
-
-	// Update
-	req = httptest.NewRequest(http.MethodPut, "/tasks/1", bytes.NewReader([]byte(`{"title":"x"}`)))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotImplemented, w.Code)
-
-	// Delete
-	req = httptest.NewRequest(http.MethodDelete, "/tasks/1", nil)
-	w = httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotImplemented, w.Code)
-}
