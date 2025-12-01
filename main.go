@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	router := controller.SetupRouter()
+	dependencies := controller.RegisterDependencies()
+	router := controller.SetupRouter(dependencies)
 
 	// escucha en 0.0.0.0:8080 por defecto
 	if err := router.Run(); err != nil {

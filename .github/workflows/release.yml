@@ -1,0 +1,133 @@
+name: Release and Deploy
+on:
+  release:
+    types: [created]
+
+env:
+  GO_VERSION: '1.25'
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}   # Ej: 635368439700.dkr.ecr.us-east-1.amazonaws.com
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}       # Ej: graphqlserver
+
+jobs:
+  # Job 1: Tests
+  test:
+    name: Testing and Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Run Tests
+      run: go test -race -covermode=atomic -v ./... -coverprofile=coverage.txt
+
+    - name: Validate coverage
+      run: |
+        COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Coverage: $COVERAGE%"
+        COVERAGE_INT=$(echo "$COVERAGE" | cut -d'.' -f1)
+        if [ "$COVERAGE_INT" -lt 1 ]; then
+          echo "❌ Coverage is below 1%"
+          exit 1
+        fi
+
+  # Job 2: Linter
+  golangci:
+    name: Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4.0
+
+  # Job 3: SAST
+  sast:
+    name: SAST Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install gosec
+      run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+    - name: Run gosec
+      run: gosec -exclude-generated -exclude=G115,G401 ./...
+
+  # Job 4: Build + Push ECR
+  build-and-push:
+    name: Build and Push Docker Image to ECR
+    runs-on: ubuntu-latest
+    needs: [test, golangci, sast]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Get release tag
+      id: release
+      run: echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+
+    # --- AWS LOGIN ---
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # --- DOCKER BUILD & PUSH ---
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag }}
+          ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Done
+      run: |
+        echo "✅ Image pushed to ECR:"
+        echo "  ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag }}"
+        echo "  ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest"

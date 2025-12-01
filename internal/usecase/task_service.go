@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/csolarz/ionix/internal/domain"
 	"github.com/csolarz/ionix/internal/infra"
+	utils "github.com/csolarz/ionix/internal/util"
 )
 
 // Define los casos de uso relacionados con las tareas, sirve para desacoplar la lógica de negocio
@@ -42,7 +44,10 @@ func (s *TaskService) Create(ctx context.Context, task *domain.Task) (*domain.Ta
 func (s *TaskService) GetByID(ctx context.Context, id int64) (*domain.Task, error) {
 	var task *domain.Task
 	err := s.repo.GetByID(ctx, id, &task)
-	if err != nil {
+
+	if errors.Is(err, utils.ErrNotFound) {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 

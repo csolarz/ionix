@@ -12,7 +12,7 @@ type dependencies struct {
 	Task *TaskController
 }
 
-func registerDependencies() dependencies {
+func RegisterDependencies() dependencies {
 	db, err := infra.NewDBGorm(os.Getenv("CONNECTION_STRING_DB"))
 	if err != nil {
 		panic(err)

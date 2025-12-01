@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	utils "github.com/csolarz/ionix/internal/util"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -45,7 +46,10 @@ func (r *DBGorm) Close() error {
 
 func (r *DBGorm) GetByID(ctx context.Context, id int64, data any) error {
 	result := r.db.WithContext(ctx).First(data, id)
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return utils.ErrNotFound
+		}
 		return fmt.Errorf("error obteniendo registro: %w", result.Error)
 	}
 
@@ -54,7 +58,10 @@ func (r *DBGorm) GetByID(ctx context.Context, id int64, data any) error {
 
 func (r *DBGorm) GetAll(ctx context.Context, data any) error {
 	result := r.db.WithContext(ctx).Find(data)
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return utils.ErrNotFound
+		}
 		return fmt.Errorf("error obteniendo registros: %w", result.Error)
 	}
 

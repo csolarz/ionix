@@ -39,18 +39,18 @@ func (tc *TaskController) GetTaskByID(c *gin.Context) {
 	_id := c.Param("id")
 	id, err := strconv.ParseInt(_id, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "Invalid task ID")
+		c.JSON(http.StatusBadRequest, nil)
 		return
 	}
 
 	task, err := tc.usecase.GetByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "Error retrieving task")
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if task == nil {
-		c.JSON(http.StatusNotFound, "Task not found")
+		c.JSON(http.StatusNotFound, nil)
 		return
 	}
 
