@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/csolarz/ionix/internal/domain"
 	utils "github.com/csolarz/ionix/internal/util"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -20,6 +21,7 @@ type DBRepository interface {
 	Create(ctx context.Context, data any) error
 	Update(ctx context.Context, data any) error
 	Delete(ctx context.Context, data any) error
+	Validate(ctx context.Context, data any) error
 }
 
 type DBGorm struct {
@@ -90,5 +92,18 @@ func (r *DBGorm) Delete(ctx context.Context, data any) error {
 	if result.Error != nil {
 		return fmt.Errorf("error eliminando registro: %w", result.Error)
 	}
+	return nil
+}
+
+func (r *DBGorm) Validate(ctx context.Context, data any) error {
+	user := data.(*domain.User)
+	result := r.db.WithContext(ctx).Where("username = ? AND password = ?", user.Username, user.Password).First(data)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return utils.ErrNotFound
+		}
+		return fmt.Errorf("error obteniendo registro: %w", result.Error)
+	}
+
 	return nil
 }

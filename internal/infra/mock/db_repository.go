@@ -103,6 +103,24 @@ func (_m *DBRepository) Update(ctx context.Context, data interface{}) error {
 	return r0
 }
 
+// Validate provides a mock function with given fields: ctx, data
+func (_m *DBRepository) Validate(ctx context.Context, data interface{}) error {
+	ret := _m.Called(ctx, data)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Validate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}) error); ok {
+		r0 = rf(ctx, data)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewDBRepository creates a new instance of DBRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewDBRepository(t interface {

@@ -18,11 +18,14 @@ func RegisterDependencies() dependencies {
 		panic(err)
 	}
 
+	authSvc := usecase.NewAuthService(db)
+	authCtrl := NewAuthController(authSvc)
+
 	taskSvc := usecase.NewTaskService(db)
 	taskCtrl := NewTaskController(taskSvc)
 
 	return dependencies{
-		Auth: NewAuthController(nil),
+		Auth: authCtrl,
 		Task: taskCtrl,
 	}
 }

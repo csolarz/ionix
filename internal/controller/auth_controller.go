@@ -14,7 +14,7 @@ type AuthController struct {
 }
 
 // es la clave usada para identificar al usuario en el token JWT
-var identityKey = "id"
+var identityKey = "username"
 
 func NewAuthController(usecase usecase.AuthUsecase) *AuthController {
 	return &AuthController{
@@ -42,8 +42,7 @@ func (api *AuthController) UpdatePassword(c *gin.Context) {
 func (api *AuthController) PayloadFunc(data interface{}) jwt.MapClaims {
 	if user, ok := data.(*domain.User); ok {
 		return jwt.MapClaims{
-			identityKey: user.ID,
-			"username":  user.Username,
+			identityKey: user.Username,
 			"role":      user.Role,
 		}
 	}
@@ -53,31 +52,21 @@ func (api *AuthController) PayloadFunc(data interface{}) jwt.MapClaims {
 func (api *AuthController) IdentityHandler(c *gin.Context) interface{} {
 	claims := jwt.ExtractClaims(c)
 	return &domain.User{
-		ID:       int64(claims[identityKey].(float64)),
 		Username: claims["username"].(string),
 		Role:     claims["role"].(string),
 	}
 }
 
 func (api *AuthController) Authenticator(c *gin.Context) (interface{}, error) {
-	var login domain.User
-	if err := c.ShouldBindJSON(&login); err != nil {
-		return "", jwt.ErrMissingLoginValues
-	}
-
-	if login.Username == "" || login.Password == "" {
+	var user domain.User
+	if err := c.ShouldBindJSON(&user); err != nil {
 		return nil, jwt.ErrMissingLoginValues
 	}
 
-	user := &domain.User{
-		Username: login.Username,
-		Password: login.Password,
+	err := api.usecase.ValidateCredentials(c.Request.Context(), &user)
+	if err != nil {
+		return nil, jwt.ErrFailedAuthentication
 	}
-
-	//user, err := api.usecase.Login(c.Request.Context(), login.Username, login.Password)
-	//if err != nil {
-	//	return nil, jwt.ErrFailedAuthentication
-	//}
 
 	return user, nil
 }
