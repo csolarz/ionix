@@ -1,8 +1,7 @@
 package domain
 
 type User struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Username string `json:"username" gorm:"primaryKey"`
+	Password string `json:"password" gorm:"type:varchar(45);not null"`
+	Role     string `json:"role" gorm:"type:varchar(45)"`
 }
