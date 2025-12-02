@@ -125,6 +125,8 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
+        build-args: |
+          CONNECTION_STRING_DB=${{ secrets.CONNECTION_STRING_DB }}
         tags: |
           ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag }}
           ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
