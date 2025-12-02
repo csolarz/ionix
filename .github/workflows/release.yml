@@ -6,8 +6,8 @@ on:
 env:
   GO_VERSION: '1.25'
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}   # Ej: 635368439700.dkr.ecr.us-east-1.amazonaws.com
-  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}       # Ej: graphqlserver
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
 
 jobs:
   # Job 1: Tests
