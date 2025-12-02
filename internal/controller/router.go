@@ -12,6 +12,7 @@ import (
 
 func SetupRouter(dependencies dependencies) *gin.Engine {
 	router := gin.Default()
+	router.Use(middleware.Recovery())
 
 	authMiddleware, _ := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "example zone",
