@@ -129,6 +129,10 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Set image output
+      id: build-image
+      run: echo "image=${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag }}" >> $GITHUB_OUTPUT
+
     - name: Done
       run: |
         echo "✅ Image pushed to ECR:"
