@@ -93,6 +93,8 @@ jobs:
     name: Build and Push Docker Image to ECR
     runs-on: ubuntu-latest
     needs: [test, golangci, sast]
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
 
     steps:
     - uses: actions/checkout@v4
