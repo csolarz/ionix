@@ -62,6 +62,10 @@ Variables de entorno típicas (ajustar según `internal/infra` y configuración 
    - Directo: `go run ./cmd/...`
 3. Ejecutar tests:
    - `make test` o `go test ./... -v`
+4. Ver reporte de cobertura
+   - `make cover`
+5. Ver analisis SAST Scan (deteccion de vulnerabilidades, pii, etc.)
+   - `make sast`
 
 ## VS Code (arrancar y debug)
 - Abrir la carpeta del proyecto en VS Code.
@@ -92,15 +96,56 @@ Ejemplo mínimo de `launch.json`:
 ## Endpoints implementados (resumen)
 Controlador de tareas expone:
 - POST /login — login de usuarios (payload JSON -> domain.User)
-- POST /tasks — crear una tarea (payload JSON -> domain.Task).
-- GET /tasks/:id — obtener tarea por ID.
-- GET /tasks — listar todas las tareas.
-- PUT /tasks/:id — actualizar tarea (payload JSON).
-- DELETE /tasks/:id — eliminar tarea por ID.
+- POST /api/tasks — crear una tarea (payload JSON -> domain.Task).
+- GET /api/tasks/:id — obtener tarea por ID.
+- GET /api/tasks — listar todas las tareas.
+- PUT /api/tasks/:id — actualizar tarea (payload JSON -> domain.Task) - Not implemented.
+- DELETE /api/tasks/:id — eliminar tarea por ID - Not implemented.
 
 Cada endpoint devuelve códigos HTTP estándar:
-- 200 OK, 201 Created, 400 Bad Request, 404 Not Found, 500 Internal Server Error según el caso.
+- 200 OK, 
+- 201 Created
+- 400 Bad Request
+- 401 Not Authorized
+- 404 Not Found
+- 500 Internal Server Error según el caso.
 
 ## Tests y mocks
 - Los tests unitarios usan mocks generados por mockery (`internal/infra/mock`, `internal/usecase/mock`).
-- Ejecutar tests: `go test ./...` o `make test`.
+- Ejecutar tests: `go test ./...`, `make test` o `make cover` para ver reporte de cobertura.
+
+
+## Curl 
+
+Login 
+```
+curl --location 'http://my-ecs-fargate-cluster-alb-874497135.us-east-2.elb.amazonaws.com/login' \
+--header 'Content-Type: application/json' \
+--data '{
+    "username": "carlos", // admin
+    "password": "123" // admin 
+}'
+```
+
+Create tasks
+```
+curl --location 'http://my-ecs-fargate-cluster-alb-874497135.us-east-2.elb.amazonaws.com/api/tasks' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjQ3ODk3NjAsImlkIjoyLCJvcmlnX2lhdCI6MTc2NDc4NjE2MCwicm9sZSI6IiIsInVzZXJuYW1lIjoiY2FybG9zIn0.UIRv-Km9JwtCNnUGPTPfWTHkWeI_w3XXAEQ1zZJ50T8' \
+--header 'Content-Type: application/json' \
+--data '{
+    "title": "postmortem session",
+    "due_date": "2025-12-08T00:00:00Z"
+}'
+```
+
+Listar tasks
+```
+curl --location 'http://my-ecs-fargate-cluster-alb-874497135.us-east-2.elb.amazonaws.com/api/tasks' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjQ3ODk3NjAsImlkIjoyLCJvcmlnX2lhdCI6MTc2NDc4NjE2MCwicm9sZSI6IiIsInVzZXJuYW1lIjoiY2FybG9zIn0.UIRv-Km9JwtCNnUGPTPfWTHkWeI_w3XXAEQ1zZJ50T8'
+```
+
+Obtener una task
+```
+curl --location 'http://my-ecs-fargate-cluster-alb-874497135.us-east-2.elb.amazonaws.com/api/tasks/7' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjQ3ODk3NjAsImlkIjoyLCJvcmlnX2lhdCI6MTc2NDc4NjE2MCwicm9sZSI6IiIsInVzZXJuYW1lIjoiY2FybG9zIn0.UIRv-Km9JwtCNnUGPTPfWTHkWeI_w3XXAEQ1zZJ50T8'
+```
