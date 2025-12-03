@@ -59,7 +59,7 @@ func (api *AuthController) IdentityHandler(c *gin.Context) interface{} {
 
 func (api *AuthController) Authenticator(c *gin.Context) (interface{}, error) {
 	var user domain.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&user); err != nil || user.Username == "" || user.Password == "" {
 		return nil, jwt.ErrMissingLoginValues
 	}
 

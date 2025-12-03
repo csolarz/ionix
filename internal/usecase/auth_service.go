@@ -7,6 +7,7 @@ import (
 	"github.com/csolarz/ionix/internal/infra"
 )
 
+//go:generate mockery --name=AuthUsecase --output=./mock --outpkg=mock --case=snake
 type AuthUsecase interface {
 	ValidateCredentials(ctx context.Context, user *domain.User) error
 	Logout(ctx context.Context, userID string) error
