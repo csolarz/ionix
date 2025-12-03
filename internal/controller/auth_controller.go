@@ -14,7 +14,7 @@ type AuthController struct {
 }
 
 // es la clave usada para identificar al usuario en el token JWT
-var identityKey = "username"
+var identityKey = "id"
 
 func NewAuthController(usecase usecase.AuthUsecase) *AuthController {
 	return &AuthController{
@@ -42,7 +42,8 @@ func (api *AuthController) UpdatePassword(c *gin.Context) {
 func (api *AuthController) PayloadFunc(data interface{}) jwt.MapClaims {
 	if user, ok := data.(*domain.User); ok {
 		return jwt.MapClaims{
-			identityKey: user.Username,
+			identityKey: user.ID,
+			"username":  user.Username,
 			"role":      user.Role,
 		}
 	}
@@ -52,6 +53,7 @@ func (api *AuthController) PayloadFunc(data interface{}) jwt.MapClaims {
 func (api *AuthController) IdentityHandler(c *gin.Context) interface{} {
 	claims := jwt.ExtractClaims(c)
 	return &domain.User{
+		ID:       int64(claims[identityKey].(float64)),
 		Username: claims["username"].(string),
 		Role:     claims["role"].(string),
 	}
@@ -68,5 +70,5 @@ func (api *AuthController) Authenticator(c *gin.Context) (interface{}, error) {
 		return nil, jwt.ErrFailedAuthentication
 	}
 
-	return user, nil
+	return &user, nil
 }

@@ -102,7 +102,7 @@ func TestPayloadFunc_ValidUser(t *testing.T) {
 	claims := ac.PayloadFunc(user)
 
 	assert.NotNil(t, claims)
-	assert.Equal(t, "testuser", claims[identityKey])
+	assert.Equal(t, "testuser", claims["username"])
 	assert.Equal(t, "admin", claims["role"])
 
 	m.AssertNotCalled(t, "ValidateCredentials")
@@ -143,7 +143,7 @@ func TestPayloadFunc_UserRole(t *testing.T) {
 
 	claims := ac.PayloadFunc(user)
 
-	assert.Equal(t, "john", claims[identityKey])
+	assert.Equal(t, "john", claims["username"])
 	assert.Equal(t, "user", claims["role"])
 }
 
@@ -158,7 +158,7 @@ func TestPayloadFunc_GuestRole(t *testing.T) {
 
 	claims := ac.PayloadFunc(user)
 
-	assert.Equal(t, "guest", claims[identityKey])
+	assert.Equal(t, "guest", claims["username"])
 	assert.Equal(t, "guest", claims["role"])
 }
 
@@ -170,14 +170,16 @@ func TestIdentityHandler_ValidClaims(t *testing.T) {
 
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Set("JWT_PAYLOAD", jwt.MapClaims{
-		"username": "testuser",
-		"role":     "user",
+		identityKey: 123.0,
+		"username":  "testuser",
+		"role":      "user",
 	})
 
 	result := ac.IdentityHandler(c)
 
 	assert.NotNil(t, result)
 	if user, ok := result.(*domain.User); ok {
+		assert.Equal(t, int64(123), user.ID)
 		assert.Equal(t, "testuser", user.Username)
 		assert.Equal(t, "user", user.Role)
 	}
@@ -191,14 +193,16 @@ func TestIdentityHandler_AdminClaims(t *testing.T) {
 
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Set("JWT_PAYLOAD", jwt.MapClaims{
-		"username": "admin",
-		"role":     "admin",
+		identityKey: 456.0,
+		"username":  "admin",
+		"role":      "admin",
 	})
 
 	result := ac.IdentityHandler(c)
 
 	assert.NotNil(t, result)
 	if user, ok := result.(*domain.User); ok {
+		assert.Equal(t, int64(456), user.ID)
 		assert.Equal(t, "admin", user.Username)
 		assert.Equal(t, "admin", user.Role)
 	}
@@ -210,14 +214,16 @@ func TestIdentityHandler_GuestClaims(t *testing.T) {
 
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Set("JWT_PAYLOAD", jwt.MapClaims{
-		"username": "guest",
-		"role":     "guest",
+		identityKey: 789.0,
+		"username":  "guest",
+		"role":      "guest",
 	})
 
 	result := ac.IdentityHandler(c)
 
 	assert.NotNil(t, result)
 	if user, ok := result.(*domain.User); ok {
+		assert.Equal(t, int64(789), user.ID)
 		assert.Equal(t, "guest", user.Username)
 		assert.Equal(t, "guest", user.Role)
 	}
@@ -414,25 +420,25 @@ func TestAuthController_PayloadFunc_WithDifferentRoles(t *testing.T) {
 	}{
 		{
 			name:     "Admin role",
-			user:     &domain.User{Username: "admin", Role: "admin"},
-			expected: map[string]interface{}{identityKey: "admin", "role": "admin"},
+			user:     &domain.User{ID: 1, Username: "admin", Role: "admin"},
+			expected: map[string]interface{}{identityKey: 1.0, "username": "admin", "role": "admin"},
 		},
 		{
 			name:     "User role",
-			user:     &domain.User{Username: "john", Role: "user"},
-			expected: map[string]interface{}{identityKey: "john", "role": "user"},
+			user:     &domain.User{ID: 2, Username: "john", Role: "user"},
+			expected: map[string]interface{}{identityKey: 2.0, "username": "john", "role": "user"},
 		},
 		{
 			name:     "Guest role",
-			user:     &domain.User{Username: "guest", Role: "guest"},
-			expected: map[string]interface{}{identityKey: "guest", "role": "guest"},
+			user:     &domain.User{ID: 3, Username: "guest", Role: "guest"},
+			expected: map[string]interface{}{identityKey: 3.0, "username": "guest", "role": "guest"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			claims := ac.PayloadFunc(tc.user)
-			assert.Equal(t, tc.expected[identityKey], claims[identityKey])
+			assert.EqualValues(t, tc.expected[identityKey], claims[identityKey])
 			assert.Equal(t, tc.expected["role"], claims["role"])
 		})
 	}
