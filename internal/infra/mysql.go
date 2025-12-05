@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/csolarz/ionix/internal/domain"
-	utils "github.com/csolarz/ionix/internal/util"
+	utils "github.com/csolarz/ionix/internal/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

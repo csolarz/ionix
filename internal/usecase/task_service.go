@@ -6,7 +6,7 @@ import (
 
 	"github.com/csolarz/ionix/internal/domain"
 	"github.com/csolarz/ionix/internal/infra"
-	utils "github.com/csolarz/ionix/internal/util"
+	utils "github.com/csolarz/ionix/internal/utils"
 )
 
 // Define los casos de uso relacionados con las tareas, sirve para desacoplar la lógica de negocio
