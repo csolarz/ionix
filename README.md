@@ -2,6 +2,11 @@
 
 Ionix es un servicio backend estructurado siguiendo Clean Architecture para separar la lógica de negocio, casos de uso y la infraestructura.
 
+## Blueprint AWS
+
+<img width="991" height="441" alt="image" src="https://github.com/csolarz/ionix/tree/develop/docs/images/blueprint.drawio.png" />
+
+
 ## Versión de Go
 Requiere Go 1.25 (ver `go.mod` para confirmar la versión exacta utilizada).
 
