@@ -1,6 +1,12 @@
 codecov:
   require_ci_to_pass: yes
 
+ignore:
+  - "**/mocks/*"
+  - "**/graph/*"
+  - "**/*_test.go"
+  - "main.go"
+
 coverage:
   status:
     project:
